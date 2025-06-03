@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pokedex</title>
-    <link rel="icon" href="images\icon\Pokeball_icon-icons.com_67533.png" type="image/x-icon"> 
+    <link rel="icon" href="images\icon\Pokeball_icon-icons.com_67533.png" type="image/png"> 
     <link rel="stylesheet" href="style.css">
     <script defer src="script.js"></script> <!--  'defer' sorgt dafür, dass das Skript nach dem Parsen des HTMLs ausgeführt wird -->
 </head>
 <body>
 
     <!--Ladebildschirm (anfangs ausgeblendet) -->
-    <div id="loadingScreen" class="loading-screen" style="display: none;">
-        <p>Loading Pokémon...</p>
-        <!-- Hier könnte später ein Spinner-GIF oder eine CSS-Animation hin-->
+    <div id="loadingScreen" class="loading-screen hidden">
+    <p>Loading Pokémon...</p>
+    <!-- Hier könnte später ein Spinner-GIF oder eine CSS-Animation hin-->
     </div>
 
     <!--Haupt-Wrapper für die Inhaltsbegrenzung auf großen Monitoren -->
@@ -52,7 +52,7 @@
 
 
     <!-- Overlay für die große Pokémon-Ansicht (anfangs ausgeblendet) -->
-    <div id="pokemonDetailOverlay" class="overlay" style="display: none;">
+    <div id="pokemonDetailOverlay" class="overlay hidden">
         <div id="pokemonDetailContent" class="overlay-content">
             <!-- Inhalt der großen Karte wird hier per JavaScript eingefügt -->
             <!-- Beispiel für Schließen-Button und Navigation -->
