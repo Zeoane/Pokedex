@@ -9,6 +9,16 @@ const loadingScreen = document.getElementById('loadingScreen');
 const pokemonCardContainer = document.getElementById('pokemonCardContainer');
 const loadMoreButton = document.getElementById('loadMoreButton');
 
+// DOM-Elemente für Overlay
+const pokemonDetailOverlay = document.getElementById('pokemonDetailOverlay');
+const pokemonDetailContent = document.getElementById('pokemonDetailContent');
+const closeOverlayButton = document.getElementById('closeOverlayButton');
+const largePokemonCard = document.getElementById('largePokemonCard');
+
+// DOM-Elemente für Overlay-Navigation
+const prevPokemonButton = document.getElementById('prevPokemonButton');
+const nextPokemonButton = document.getElementById('nextPokemonButton');
+
 // Typ-zu-Farbe Mapping (kann erweitert/angepasst werden)
 const typeColors = {
     normal: '#A8A77A',
@@ -91,6 +101,45 @@ function createPokemonCardHTML(pokemonDetails) {
     `;
 }
 
+/**
+ * Erzeugt den HTML-String für die große Pokémon-Detailkarte im Overlay.
+ * @param {Object} pokemonDetails - Das detaillierte Pokémon-Objekt.
+ * @returns {string} Der HTML-String für die große Pokémon-Karte.
+ */
+function createLargePokemonCardHTML(pokemonDetails) {
+    const pokemonName = pokemonDetails.name.charAt(0).toUpperCase() + pokemonDetails.name.slice(1);
+    const pokemonId = String(pokemonDetails.id).padStart(3, '0');
+    const imageUrl = pokemonDetails.sprites.other?.['official-artwork']?.front_default || pokemonDetails.sprites.front_default || 'placeholder.png';
+
+    const typesHTML = pokemonDetails.types.map(typeInfo =>
+        `<span class="pokemon-type" style="background-color: ${typeColors[typeInfo.type.name] || '#777'}">
+            ${typeInfo.type.name.charAt(0).toUpperCase() + typeInfo.type.name.slice(1)}
+        </span>`
+    ).join('');
+
+    const primaryType = pokemonDetails.types[0].type.name;
+    const cardBackgroundColor = typeColors[primaryType] || '#EEE';
+
+    // Hier werden wir später die Stats hinzufügen
+    const statsHTML = pokemonDetails.stats.map(statInfo => `
+        <p><strong>${statInfo.stat.name.toUpperCase()}:</strong> ${statInfo.base_stat}</p>
+    `).join('');
+
+
+    return `
+        <div class="large-pokemon-card" style="background-color: ${cardBackgroundColor};">
+            <h2>${pokemonName} #${pokemonId}</h2>
+            <img src="${imageUrl}" alt="${pokemonName}" class="large-pokemon-image">
+            <div class="large-pokemon-types">${typesHTML}</div>
+            <div class="pokemon-details-stats">
+                <h3>Base Stats:</h3>
+                ${statsHTML}
+            </div>
+            <p><strong>Height:</strong> ${pokemonDetails.height / 10} m</p>
+            <p><strong>Weight:</strong> ${pokemonDetails.weight / 10} kg</p>
+        </div>
+    `;
+}
 
 /**
  * Rendert die Pokémon-Karten im DOM.
@@ -105,8 +154,14 @@ function renderPokemonCards(detailedPokemonList) {
         if (pokemonDetails) { // Sicherstellen, dass das Detail-Objekt existiert
             const cardHTML = createPokemonCardHTML(pokemonDetails);
             pokemonCardContainer.innerHTML += cardHTML;
+            // Füge das Pokémon zur globalen Liste hinzu, wenn es noch nicht existiert
+            if (!allLoadedPokemon.some(p => p.id === pokemonDetails.id)) {
+                allLoadedPokemon.push(pokemonDetails);
+            }
         }
     });
+    // Sortiere die Liste nach ID, damit die Navigation später einfacher ist
+    allLoadedPokemon.sort((a, b) => a.id - b.id);
 }
 
 // -----------------------------------------------------------------------------
@@ -229,6 +284,105 @@ async function initializePokedex() {
     hideLoadingScreen();
 }
 
+// Globale Variable, um die aktuell geladenen Pokémon zu speichern (für Navigation im Overlay)
+let allLoadedPokemon = [];
+let currentPokemonIndex = -1; // Index des aktuell im Overlay angezeigten Pokemons
+
+/**
+ * Behandelt den Klick auf eine kleine Pokémon-Karte.
+ * Öffnet das Detail-Overlay.
+ * @param {Event} event - Das Klick-Event.
+ */
+async function handlePokemonCardClick(event) {
+    const clickedCard = event.target.closest('.pokemon-card');
+    if (clickedCard) {
+        const pokemonId = parseInt(clickedCard.dataset.id); // dataset.id gibt den Wert aus data-id
+        await openPokemonDetailOverlay(pokemonId);
+    }
+}
+
+/**
+ * Öffnet das Pokémon Detail Overlay und lädt die Daten des spezifischen Pokémons.
+ * @param {number} pokemonId - Die ID des Pokémons, dessen Details angezeigt werden sollen.
+ */
+async function openPokemonDetailOverlay(pokemonId) {
+    showLoadingScreen(); // Ladebildschirm anzeigen
+
+    document.body.style.overflow = 'hidden'; // Hintergrund-Scrolling verhindern
+
+    // Holen der Pokémon-Details und Finden des Index
+    const pokemonDetails = allLoadedPokemon.find(p => p.id === pokemonId);
+    currentPokemonIndex = allLoadedPokemon.findIndex(p => p.id === pokemonId);
+
+    if (pokemonDetails) {
+        largePokemonCard.innerHTML = createLargePokemonCardHTML(pokemonDetails);
+        pokemonDetailOverlay.classList.remove('hidden');
+        updateNavigationButtons(); // Navigations-Buttons aktualisieren
+    } else {
+        console.error(`Could not find details for Pokémon ID: ${pokemonId}`);
+        // Optional: Fehlermeldung im Overlay anzeigen
+    }
+
+    hideLoadingScreen(); // Ladebildschirm verstecken
+}
+
+/**
+ * Behandelt Klicks auf das Overlay, um es zu schließen, wenn außerhalb des Inhalts geklickt wird.
+ * @param {Event} event - Das Klick-Event.
+ */
+function handleOverlayClick(event) {
+    // Überprüft, ob der Klick direkt auf dem Overlay-Element war (nicht auf einem Kindelement)
+    if (event.target === pokemonDetailOverlay) {
+        closePokemonDetailOverlay();
+    }
+}
+
+/**
+ * Schließt das Pokémon Detail Overlay.
+ */
+function closePokemonDetailOverlay() {
+    pokemonDetailOverlay.classList.add('hidden');
+    document.body.style.overflow = ''; // Hintergrund-Scrolling wieder zulassen
+    largePokemonCard.innerHTML = ''; // Inhalt der großen Karte leeren
+}
+
+/**
+ * Navigiert zwischen den Pokémon im Overlay.
+ * @param {number} direction - -1 für vorheriges Pokémon, 1 für nächstes Pokémon.
+ */
+async function navigatePokemon(direction) {
+    const newIndex = currentPokemonIndex + direction;
+
+    // Überprüfen, ob der neue Index innerhalb der Grenzen liegt
+    if (newIndex >= 0 && newIndex < allLoadedPokemon.length) {
+        const nextPokemon = allLoadedPokemon[newIndex];
+        // Das Overlay direkt mit den neuen Daten aktualisieren, ohne es komplett zu schließen/öffnen
+        showLoadingScreen();
+        largePokemonCard.innerHTML = createLargePokemonCardHTML(nextPokemon);
+        currentPokemonIndex = newIndex;
+        updateNavigationButtons(); // Navigations-Buttons nach dem Wechsel aktualisieren
+        hideLoadingScreen();
+    }
+}
+
+/**
+ * Aktualisiert den Aktivierungszustand der Navigations-Buttons
+ * basierend auf dem aktuellen Pokémon-Index.
+ */
+function updateNavigationButtons() {
+    if (currentPokemonIndex <= 0) {
+        prevPokemonButton.disabled = true;
+    } else {
+        prevPokemonButton.disabled = false;
+    }
+
+    if (currentPokemonIndex >= allLoadedPokemon.length - 1) {
+        nextPokemonButton.disabled = true;
+    } else {
+        nextPokemonButton.disabled = false;
+    }
+}
+
 // -----------------------------------------------------------------------------
 // EVENT LISTENER
 // -----------------------------------------------------------------------------
@@ -237,3 +391,26 @@ if (loadMoreButton) {
 }
 
 document.addEventListener('DOMContentLoaded', initializePokedex);
+
+// Event Listener für Klick auf eine Pokémon-Karte, um das Overlay zu öffnen
+if (pokemonCardContainer) {
+    pokemonCardContainer.addEventListener('click', handlePokemonCardClick);
+}
+
+// Event Listener für den Schließen-Button im Overlay
+if (closeOverlayButton) {
+    closeOverlayButton.addEventListener('click', closePokemonDetailOverlay);
+}
+
+// Event Listener für das Schließen des Overlays durch Klick außerhalb des Inhalts
+if (pokemonDetailOverlay) {
+    pokemonDetailOverlay.addEventListener('click', handleOverlayClick);
+}
+
+// Event Listener für die Navigation im Overlay
+if (prevPokemonButton) {
+    prevPokemonButton.addEventListener('click', () => navigatePokemon(-1));
+}
+if (nextPokemonButton) {
+    nextPokemonButton.addEventListener('click', () => navigatePokemon(1));
+}
