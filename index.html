@@ -1,69 +1,53 @@
 <!DOCTYPE html>
-<html lang="en"> 
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pokedex</title>
-    <link rel="icon" href="images\icon\Pokeball_icon-icons.com_67533.png" type="image/png"> 
+    <link rel="icon" href="images\icon\Pokeball_icon-icons.com_67533.png" type="image/png">
     <link rel="stylesheet" href="style.css">
-    <script defer src="script.js"></script> <!--  'defer' sorgt dafür, dass das Skript nach dem Parsen des HTMLs ausgeführt wird -->
-</head>
-<body>
+    <link rel="stylesheet" href="css/buttons.css">
+    <script type="module" defer src="main.js"></script> 
+</head> <body>
 
-    <!--Ladebildschirm (anfangs ausgeblendet) -->
     <div id="loadingScreen" class="loading-screen hidden">
-    <p>Loading Pokémon...</p>
-    <!-- Hier könnte später ein Spinner-GIF oder eine CSS-Animation hin-->
+        <p>Loading Pokémon...</p>
     </div>
 
-    <!--Haupt-Wrapper für die Inhaltsbegrenzung auf großen Monitoren -->
     <div class="content-wrapper">
 
         <header>
             <div class="header-content">
-                <!-- Logo - du kannst hier ein img-Tag oder einen div mit Hintergrundbild verwenden -->
                 <div class="logo-container">
-                    <!--Beispiel: <img src="./img/pokedex-logo.png" alt="Pokedex Logo" id="logo"> -->
-                    <span id="logo">PokéLogo</span> <!-- Einfacher Text als Platzhalter -->
+                    <span id="logo">PokéLogo</span>
                 </div>
                 <h1>Pokedex</h1>
                 <div class="search-container">
                     <input type="search" id="searchInput" placeholder="Search Pokémon (min. 3 chars)">
-                    <button id="searchButton" type="button">Suche</button>
+                    <button id="searchButton" type="button">Search</button>
                 </div>
             </div>
         </header>
 
         <main>
-           <!-- Container für die Pokémon-Karten -->
             <div id="pokemonCardContainer">
-                <!-- Pokémon-Karten werden hier per JavaScript eingefügt -->
             </div>
         </main>
 
         <footer>
-            <!-- Button zum Laden weiterer Pokémon -->
             <div class="load-more-container">
-                <button id="loadMoreButton" type="button">Lade mehr Pokémon</button>
+                <button id="loadMoreButton" type="button">Load more Pokémon</button>
             </div>
         </footer>
 
-    </div> <!-- Ende content-wrapper -->
-
-
-    <!-- Overlay für die große Pokémon-Ansicht (anfangs ausgeblendet) -->
-   <div id="pokemonDetailOverlay" class="overlay hidden">
+    </div> <div id="pokemonDetailOverlay" class="overlay hidden">
         <div id="pokemonDetailContent" class="overlay-content">
-            <!-- Inhalt der großen Karte wird hier per JavaScript eingefügt -->
-            <!-- Beispiel für Schließen-Button und Navigation -->
-            
-             <div id="largePokemonCard">
-                <div class="pokemon-navigation">
-                    <button id="closeOverlayButton" class="close-button">×</button>
-                    <button id="prevPokemonButton" class="nav-arrow">&lt;</button> 
-                    <button id="nextPokemonButton" class="nav-arrow">&gt;</button>
-                </div>
-                </div>
+            <button id="closeOverlayButton" class="close-button">×</button>
+            <button id="prevPokemonButton" class="nav-arrow">&lt;</button>
+            <button id="nextPokemonButton" class="nav-arrow">&gt;</button>
+
+            <div id="largePokemonCard">
+            </div>
         </div>
     </div>
 
