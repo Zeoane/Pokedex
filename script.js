@@ -95,7 +95,7 @@ function createPokemonCardHTML(pokemonDetails) {
              style="background-color: ${cardBackgroundColor};">
             <img src="${imageUrl}" alt="${pokemonName}" class="pokemon-image">
             <h3>${pokemonName}</h3>
-            <p class="pokemon-id">#${String(pokemonId).padStart(3, '0')}</p> {/* ID mit führenden Nullen */}
+            <p class="pokemon-id">#${String(pokemonId).padStart(3, '0')}</p> 
             <div class="pokemon-types">${typesHTML}</div>
         </div>
     `;
