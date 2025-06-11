@@ -1,5 +1,3 @@
-// js/ui.js
-
 export const typeColors = {
     normal: '#A8A77A', fire: '#EE8130', water: '#6390F0', electric: '#F7D02C',
     grass: '#7AC74C', ice: '#96D9D6', fighting: '#C22E28', poison: '#A33EA1',
@@ -31,16 +29,13 @@ export function createPokemonCardHTML(pokemonDetails) {
     const pokemonId = pokemonDetails.id;
    // Use image URL directly from pokemonDetails as it has already been formatted in api.js
     const imageUrl = pokemonDetails.imageUrl || 'https://via.placeholder.com/120x120.png?text=No+Image'; // Fallback picture
-
     const typesHTML = pokemonDetails.types.map(typeName =>
         `<span class="pokemon-type" style="background-color: ${typeColors[typeName] || '#777'}">
             ${typeName.charAt(0).toUpperCase() + typeName.slice(1)}
         </span>`
     ).join('');
-
     const primaryType = pokemonDetails.types[0];
     const cardBackgroundColor = typeColors[primaryType] || '#EEE';
-
     return `
         <div class="pokemon-card"
              data-id="${pokemonId}"
@@ -65,21 +60,17 @@ export function createLargePokemonCardHTML(pokemonDetails) {
     const pokemonId = String(pokemonDetails.id).padStart(3, '0');
    // Use image URL directly from pokemonDetailsHTML.
     const imageUrl = pokemonDetails.imageUrl || 'https://via.placeholder.com/200x200.png?text=No+Image'; // Fallback-Bild für Overlay
-
     const typesHTML = pokemonDetails.types.map(typeName =>
         `<span class="pokemon-type" style="background-color: ${typeColors[typeName] || '#777'}">
             ${typeName.charAt(0).toUpperCase() + typeName.slice(1)}
         </span>`
     ).join('');
-
     const statsHTML = pokemonDetails.stats.map(statInfo => `
         <p><strong>${statInfo.name.charAt(0).toUpperCase() + statInfo.name.slice(1)}:</strong> ${statInfo.base_stat}</p>
     `).join('');
-
     const abilitiesHTML = pokemonDetails.abilities.map(abilityName =>
         abilityName.charAt(0).toUpperCase() + abilityName.slice(1)
     ).join(', ');
-
     return `
         <h2>#${pokemonId} ${pokemonName}</h2>
         <img src="${imageUrl}" alt="${pokemonName}" class="large-pokemon-image">
@@ -106,9 +97,7 @@ export function renderPokemonCards(detailedPokemonList, containerElement) {
         console.error('Container element for Pokémon cards not found!');
         return;
     }
-
     const fragment = document.createDocumentFragment();
-
     detailedPokemonList.forEach(pokemonDetails => {
         if (pokemonDetails) {
             const cardHTMLString = createPokemonCardHTML(pokemonDetails);
@@ -135,7 +124,6 @@ export function renderLargePokemonCard(pokemonDetails, containerElement) {
     }
     const cardHTML = createLargePokemonCardHTML(pokemonDetails);
     containerElement.innerHTML = cardHTML;
-
     const primaryType = pokemonDetails.types[0];
     const overlayContent = document.getElementById('pokemonDetailContent');
     if (overlayContent) {

@@ -1,4 +1,3 @@
-// js/search.js
 import * as UI from './ui.js'; // UI Modul import
 
 const searchInput = document.getElementById('searchInput');
@@ -42,16 +41,13 @@ function performSearch(searchTerm) {
     // the current content is simply overwritten with all loaded Pokémon.
         return;
     }
-
     // If the search term has less than 3 characters, message is displayed
     if (searchTerm.length < 3) {
         pokemonCardContainer.innerHTML = '<p>Bitte gib mindestens 3 Zeichen für die Suche ein.</p>';
         return;
     }
-
     // Show loading screen, as filtering may take a short time depending on the amount of data
     UI.showLoadingScreen(document.getElementById('loadingScreen')); 
-
     const filteredPokemon = allPokemonData.filter(pokemon => {
     //Check if the Pokémon name contains the search term
     // .includes() is more flexible than === or startsWith
@@ -60,13 +56,11 @@ function performSearch(searchTerm) {
 
     // Empty container before rendering new results
     pokemonCardContainer.innerHTML = '';
-
     if (filteredPokemon.length > 0) {
         UI.renderPokemonCards(filteredPokemon, pokemonCardContainer);
     } else {
         pokemonCardContainer.innerHTML = '<p>Keine Pokémon gefunden, die deiner Suche entsprechen.</p>';
     }
-
     UI.hideLoadingScreen(document.getElementById('loadingScreen')); // Hide loading screen
 }
 

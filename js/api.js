@@ -1,6 +1,4 @@
-// js/api.js
 export const POKE_API_BASE_URL = 'https://pokeapi.co/api/v2/';
-
 /**
  * Retrieves and formats details about a specific Pokémon.
  * @param {string} url - URL of specific pokémon.
@@ -18,10 +16,8 @@ export async function fetchPokemonDetails(url) {
             return null;
         }
         const data = await response.json();
-
         // **Logic for the best image URL
         const imageUrl = data.sprites.other?.['official-artwork']?.front_default || data.sprites.front_default || 'https://via.placeholder.com/120x120.png?text=No+Image'; // Fallback-Bild
-        
         return {
             id: data.id,
             name: data.name,
@@ -41,12 +37,11 @@ export async function fetchPokemonDetails(url) {
     }
 }
 
-/**
- * Get a list of Pokémon with offset and limit and their detailed information.*/
+/** Get a list of Pokémon with offset and limit and their detailed information.
  @param {number} limit 
  @param {number} offset 
  @returns {Promise<{list: Array<Object>, nextUrl: string|null}>} 
- 
+ */
 export async function fetchPokemonData(limit, offset) {
     const listUrl = `${POKE_API_BASE_URL}pokemon?limit=${limit}&offset=${offset}`;
     try {
@@ -56,13 +51,10 @@ export async function fetchPokemonData(limit, offset) {
             return { list: [], nextUrl: null };
         }
         const listData = await listResponse.json();
-
         const detailPromises = listData.results.map(pokemon => fetchPokemonDetails(pokemon.url));
         const detailedPokemon = await Promise.all(detailPromises);
-
         const validDetailedPokemon = detailedPokemon.filter(details => details !== null);
-
-        return { list: validDetailedPokemon, nextUrl: listData.next };
+    return { list: validDetailedPokemon, nextUrl: listData.next };
     } catch (error) {
         console.error('Error in fetchPokemonData:', error);
         return { list: [], nextUrl: null };

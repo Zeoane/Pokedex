@@ -1,4 +1,3 @@
-// js/overlayManager.js
 import * as UI from './ui.js'; // UI Modul import
 
 const pokemonDetailOverlay = document.getElementById('pokemonDetailOverlay');
@@ -19,18 +18,14 @@ let _currentPokemonIndex = -1;
 export function openPokemonDetailOverlay(pokemonId, allPokemonData) {
     _allLoadedPokemon = allPokemonData;
     _currentPokemonIndex = _allLoadedPokemon.findIndex(p => p.id === pokemonId);
-
     if (_currentPokemonIndex === -1) {
         console.error(`Pokémon with ID ${pokemonId} not found in loaded data.`);
         return;
     }
-
     const pokemonDetails = _allLoadedPokemon[_currentPokemonIndex];
-
     // Ensure that the loading screen is displayed before rendering begins
     UI.showLoadingScreen(document.getElementById('loadingScreen'));
     document.body.style.overflow = 'hidden'; // Prevent background scrolling
-
     // Sets the background color of the OVERLAY CONTENT based on the primary type
     // pokemonDetails.types is already an array of strings (e.g., ['grass', 'poison'])
     const primaryType = pokemonDetails.types[0]; // Direct access to the type name
@@ -39,12 +34,9 @@ export function openPokemonDetailOverlay(pokemonId, allPokemonData) {
     } else {
         console.warn("Element 'pokemonDetailContent' not found for background color.");
     }
-
-
     largePokemonCard.innerHTML = UI.createLargePokemonCardHTML(pokemonDetails);
     pokemonDetailOverlay.classList.remove('hidden'); // show Overlay 
     updateNavigationButtons();
-
     // Hide loading screen after everything has been rendered and displayed
     UI.hideLoadingScreen(document.getElementById('loadingScreen'));
 }
@@ -82,15 +74,12 @@ export function navigatePokemon(direction) {
     if (newIndex >= 0 && newIndex < _allLoadedPokemon.length) {
         _currentPokemonIndex = newIndex;
         const nextPokemon = _allLoadedPokemon[_currentPokemonIndex];
-
         UI.showLoadingScreen(document.getElementById('loadingScreen'));
-
         // Sets the background color also for navigation
         const primaryType = nextPokemon.types[0]; // Direct access to the type name
         if (pokemonDetailContent) { // Ensure that the element exists
             pokemonDetailContent.style.backgroundColor = UI.typeColors[primaryType] || '#EEE';
         }
-
         largePokemonCard.innerHTML = UI.createLargePokemonCardHTML(nextPokemon);
         updateNavigationButtons();
         UI.hideLoadingScreen(document.getElementById('loadingScreen'));
@@ -106,7 +95,6 @@ function updateNavigationButtons() {
         nextPokemonButton.disabled = (_currentPokemonIndex >= _allLoadedPokemon.length - 1);
     }
 }
-
 // Register event listeners only here in the module
 // Checking whether the elements exist is important because the script is loaded
 // before the entire DOM is available, and getElementById could return null.
