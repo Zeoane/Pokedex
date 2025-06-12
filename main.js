@@ -2,97 +2,111 @@
 import * as API from './js/api.js';
 import * as UI from './js/ui.js';
 import * as OverlayManager from './js/overlayManager.js';
-import * as Search from './js/search.js'; // Import of the search module is correct
+import * as Search from './js/search.js';
 
 // Global Variables
-const POKEMON_PER_PAGE = 20; 
-let currentOffset = 0; 
-let allLoadedPokemon = []; 
+const POKEMON_PER_PAGE = 20;
+let currentOffset = 0;
+let allLoadedPokemon = [];
 const loadMoreButton = document.getElementById('loadMoreButton');
 const pokemonCardContainer = document.getElementById('pokemonCardContainer');
 const loadingScreen = document.getElementById('loadingScreen');
-// searchInput and searchButton are managed directly in the search.js module,
-// so their references do not need to be stored explicitly here.
 
 /**
-* Initializes the Pokedex when the page loads.
-* Gets the first Pokémon and renders them.
-*/
-async function initializePokedex() {
-    UI.showLoadingScreen(loadingScreen); 
-        loadMoreButton.disabled = true; 
-    }
-    // Get Pokémon data from the API
-    const fetchedData = await API.fetchPokemonData(POKEMON_PER_PAGE, currentOffset);
-    if (fetchedData.list.length > 0) {
-        // render pokemon cards
-        UI.renderPokemonCards(fetchedData.list, pokemonCardContainer);
-        //Add newly loaded Pokémon to the global list
-        allLoadedPokemon.push(...fetchedData.list); 
-        // Sort the entire list by ID to ensure consistent ordering
-        allLoadedPokemon.sort((a, b) => a.id - b.id); 
-        // Initialize the search module with the updated Pokémon data.
-        // This ensures that the search always considers the currently loaded Pokémon.
-        Search.initializeSearch(allLoadedPokemon);
-        // Update offset for the next "Load More" request
-        currentOffset += POKEMON_PER_PAGE;
-        // Activate/deactivate the "Load More" button depending on the availability of additional data
-    if (fetchedData.nextUrl && loadMoreButton) {
-        loadMoreButton.disabled = false;
-    } else if (loadMoreButton) {
-        loadMoreButton.textContent = 'Alle Pokémon geladen'; // adjust text
-        loadMoreButton.disabled = true; // Deactivate button if no further data is available
-        }
+ * Updates the global list of loaded Pokémon and the search module.
+ * @param {Array<Object>} newPokemonList - List of newly fetched Pokémon.
+ */
+function updatePokemonData(newPokemonList) {
+    allLoadedPokemon.push(...newPokemonList); // Add newly loaded Pokémon to the global list
+    allLoadedPokemon.sort((a, b) => a.id - b.id); // Sort the entire list by ID to ensure consistent ordering
+    Search.initializeSearch(allLoadedPokemon); // Initialize/update the search module with the current Pokémon data
+}
+
+/**
+ * Handles the state of the "Load More" button.
+ * @param {string|null} nextUrl - URL for the next page of Pokémon, or null if no more.
+ */
+function updateLoadMoreButtonState(nextUrl) {
+    if (!loadMoreButton) return; // Exit if button element doesn't exist
+
+    if (nextUrl) {
+        loadMoreButton.disabled = false; // Reactivate when more data is available
+        loadMoreButton.textContent = 'Load more Pokémon'; // Reset text if previously changed
     } else {
-        // Display error message if no Pokémon could be loaded
-        pokemonCardContainer.innerHTML = '<p>Fehler beim Laden der Pokémon. Bitte versuche es später noch einmal.</p>';
-        if (loadMoreButton) {
-            loadMoreButton.textContent = 'Ladefehler';
-            loadMoreButton.disabled = true;
-        }
+        loadMoreButton.textContent = 'All Pokémon loaded'; // Adjust text
+        loadMoreButton.disabled = true; // Deactivate button if no further data is available
     }
+}
+
+/**
+ * Displays an error message in the Pokémon card container.
+ */
+function displayLoadingError() {
+    pokemonCardContainer.innerHTML = '<p>Error loading Pokémon. Please try again later.</p>'; // Display error message
+    if (loadMoreButton) { // Check if button exists
+        loadMoreButton.textContent = 'Load Error'; // Adjust button text
+        loadMoreButton.disabled = true; // Disable button
+    }
+}
+
+/**
+ * Fetches and renders Pokémon data for the initial load or "Load More".
+ * @param {number} limit - Number of Pokémon to fetch.
+ * @param {number} offset - Starting offset for the fetch.
+ * @returns {Promise<Object>} - Fetched data containing list and nextUrl.
+ */
+async function fetchAndRenderPokemon(limit, offset) {
+    UI.showLoadingScreen(loadingScreen); // Show loading screen
+    if (loadMoreButton) loadMoreButton.disabled = true; // Disable button immediately to prevent multiple clicks
+
+    const fetchedData = await API.fetchPokemonData(limit, offset); // Get Pokémon data from the API
+
+    if (fetchedData.list.length > 0) { // Check if data was successfully fetched
+        UI.renderPokemonCards(fetchedData.list, pokemonCardContainer); // Render pokemon cards
+        updatePokemonData(fetchedData.list); // Update global list and search
+        currentOffset += POKEMON_PER_PAGE; // Update offset for the next request
+    } else {
+        displayLoadingError(); // Display error if no Pokémon loaded
+    }
+
     UI.hideLoadingScreen(loadingScreen); // Hide loading screen
+    updateLoadMoreButtonState(fetchedData.nextUrl); // Update load more button status
+    return fetchedData; // Return fetched data for external use (e.g., Load More logic)
+}
+
+
+/**
+ * Initializes the Pokedex when the page loads.
+ * Gets the first Pokémon and renders them.
+ */
+async function initializePokedex() {
+    await fetchAndRenderPokemon(POKEMON_PER_PAGE, currentOffset); // Fetch and render initial Pokémon
+}
+
+/**
+ * Handles the "Load More Pokémon" button click.
+ */
+async function handleLoadMoreClick() {
+    await fetchAndRenderPokemon(POKEMON_PER_PAGE, currentOffset); // Fetch and render more Pokémon
+}
 
 /**
  * Event listener for clicking on a Pokémon card.
  * Opens the overlay with the details of the clicked Pokémon.
  */
 pokemonCardContainer.addEventListener('click', async (event) => {
-    // Find the next parent card with the class 'pokemon-card'
-    const clickedCard = event.target.closest('.pokemon-card');
-    if (clickedCard) {
-        const pokemonId = parseInt(clickedCard.dataset.id);
-        // Open the overlay with the Pokémon's details and the entire list for navigation
-        OverlayManager.openPokemonDetailOverlay(pokemonId, allLoadedPokemon); 
+    const clickedCard = event.target.closest('.pokemon-card'); // Find the closest parent card with the class 'pokemon-card'
+    if (clickedCard) { // Check if a card was clicked
+        const pokemonId = parseInt(clickedCard.dataset.id); // Get the Pokémon ID from the card's data attribute
+        OverlayManager.openPokemonDetailOverlay(pokemonId, allLoadedPokemon); // Open the overlay with details and the full list for navigation
     }
 });
 
-/**
- * Event listener for the "Load More Pokémon" button.
- * Loads additional Pokémon and adds them to the display.
- */
-loadMoreButton.addEventListener('click', async () => {
-    loadMoreButton.disabled = true; // Disable button immediately to prevent multiple clicks
-    UI.showLoadingScreen(loadingScreen); // Show loading screen
-    const fetchedData = await API.fetchPokemonData(POKEMON_PER_PAGE, currentOffset);
-    if (fetchedData.list.length > 0) {
-        UI.renderPokemonCards(fetchedData.list, pokemonCardContainer);
-        allLoadedPokemon.push(...fetchedData.list); // Add newly loaded Pokémon
-        allLoadedPokemon.sort((a, b) => a.id - b.id); // Sort the list again
-        currentOffset += POKEMON_PER_PAGE; // Update offset
-    //Update the search module with the newly loaded Pokémon.
-    // IMPORTANT: This is crucial for the search to find the newly loaded Pokémon.
-        Search.initializeSearch(allLoadedPokemon); 
-    }
-    UI.hideLoadingScreen(loadingScreen); // Hide loading screen
-    // Update the status of the "Load More" button based on the API response
-    if (fetchedData.nextUrl) {
-        loadMoreButton.disabled = false; // Reactivate when more data is available
-    } else {
-        loadMoreButton.textContent = 'Alle Pokémon geladen';
-        loadMoreButton.disabled = true; // Deactivate when all Pokémon have been loaded
-    }
-});
+// Event listener for the "Load More Pokémon" button.
+if (loadMoreButton) { // Check if button exists
+    loadMoreButton.addEventListener('click', handleLoadMoreClick); // Attach the click handler
+}
+
 
 // Starting point: Initialize the Pokedex as soon as the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', initializePokedex);

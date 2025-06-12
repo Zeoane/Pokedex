@@ -6,11 +6,21 @@ export const typeColors = {
     steel: '#B7B7CE', fairy: '#D685AD',
 };
 
+/**
+ * Displays the loading screen.
+ * @param {HTMLElement} loadingScreenElement - The DOM element for the loading screen.
+ */
+
 export function showLoadingScreen(loadingScreenElement) {
     if (loadingScreenElement) {
         loadingScreenElement.classList.remove('hidden');
     }
 }
+
+/**
+ * Hides the loading screen.
+ * @param {HTMLElement} loadingScreenElement - The DOM element for the loading screen.
+ */
 
 export function hideLoadingScreen(loadingScreenElement) {
     if (loadingScreenElement) {
@@ -19,62 +29,106 @@ export function hideLoadingScreen(loadingScreenElement) {
 }
 
 /**
-* Creates the HTML string for a small Pokémon card.
-* Expects a pre-formatted Pokémon details object.
- * @param {Object} pokemonDetails - A formatted Pokémon details object (from api.js).
- * @returns {string} - HTML-String card
+ * Generates the HTML string for a single Pokémon type span.
+ * @param {string} typeName - The name of the Pokémon type.
+ * @returns {string} - HTML string for the type span.
  */
-export function createPokemonCardHTML(pokemonDetails) {
-    const pokemonName = pokemonDetails.name.charAt(0).toUpperCase() + pokemonDetails.name.slice(1);
-    const pokemonId = pokemonDetails.id;
-   // Use image URL directly from pokemonDetails as it has already been formatted in api.js
-    const imageUrl = pokemonDetails.imageUrl || 'https://via.placeholder.com/120x120.png?text=No+Image'; // Fallback picture
-    const typesHTML = pokemonDetails.types.map(typeName =>
-        `<span class="pokemon-type" style="background-color: ${typeColors[typeName] || '#777'}">
-            ${typeName.charAt(0).toUpperCase() + typeName.slice(1)}
-        </span>`
-    ).join('');
-    const primaryType = pokemonDetails.types[0];
-    const cardBackgroundColor = typeColors[primaryType] || '#EEE';
-    return `
-        <div class="pokemon-card"
-             data-id="${pokemonId}"
-             data-name="${pokemonDetails.name}"
-             style="background-color: ${cardBackgroundColor};">
-            <img src="${imageUrl}" alt="${pokemonName}" class="pokemon-image">
-            <h3>${pokemonName}</h3>
-            <p class="pokemon-id">#${String(pokemonId).padStart(3, '0')}</p>
-            <div class="pokemon-types">${typesHTML}</div>
-        </div>
-    `;
+
+function createTypeSpanHTML(typeName) {
+    const displayTypeName = typeof typeName === 'string'
+                            ? typeName.charAt(0).toUpperCase() + typeName.slice(1)
+                            : 'Unknown Type';
+    return `<span class="pokemon-type" style="background-color: ${typeColors[typeName] || '#777'}">${displayTypeName}</span>`;
 }
 
 /**
- * Creates the HTML string for the large Pokémon map in the overlay.
- * Expects a pre-formatted Pokémon details object.
- * @param {Object} pokemonDetails - A formatted Pokémon details object (from api.js).
- * @returns {string} - The HTML string of the large map.
+ * Creates the image HTML for a Pokémon card.
+ * @param {string} imageUrl - The URL of the Pokémon image.
+ * @param {string} pokemonName - The name of the Pokémon for alt text.
+ * @returns {string} - HTML string for the image.
  */
-export function createLargePokemonCardHTML(pokemonDetails) {
+
+function createPokemonImageHTML(imageUrl, pokemonName, size = 'small') {
+    const className = size === 'large' ? 'large-pokemon-image' : 'pokemon-image';
+    return `<img src="${imageUrl}" alt="${pokemonName}" class="${className}">`;
+}
+
+/**
+ * Creates the textual content HTML (name, ID, types) for a small Pokémon card.
+ * @param {Object} pokemonDetails - Formatted Pokémon details.
+ * @param {string} typesHTML - Pre-generated HTML for types.
+ * @returns {string} - HTML string for text content.
+ */
+
+function createSmallCardContentHTML(pokemonDetails, typesHTML) {
     const pokemonName = pokemonDetails.name.charAt(0).toUpperCase() + pokemonDetails.name.slice(1);
     const pokemonId = String(pokemonDetails.id).padStart(3, '0');
-   // Use image URL directly from pokemonDetailsHTML.
-    const imageUrl = pokemonDetails.imageUrl || 'https://via.placeholder.com/200x200.png?text=No+Image'; // Fallback-Bild für Overlay
-    const typesHTML = pokemonDetails.types.map(typeName =>
-        `<span class="pokemon-type" style="background-color: ${typeColors[typeName] || '#777'}">
-            ${typeName.charAt(0).toUpperCase() + typeName.slice(1)}
-        </span>`
-    ).join('');
-    const statsHTML = pokemonDetails.stats.map(statInfo => `
-        <p><strong>${statInfo.name.charAt(0).toUpperCase() + statInfo.name.slice(1)}:</strong> ${statInfo.base_stat}</p>
-    `).join('');
-    const abilitiesHTML = pokemonDetails.abilities.map(abilityName =>
-        abilityName.charAt(0).toUpperCase() + abilityName.slice(1)
-    ).join(', ');
     return `
-        <h2>#${pokemonId} ${pokemonName}</h2>
-        <img src="${imageUrl}" alt="${pokemonName}" class="large-pokemon-image">
-        <div class="large-pokemon-types">${typesHTML}</div>
+        <h3>${pokemonName}</h3>
+        <p class="pokemon-id">#${pokemonId}</p>
+        <div class="pokemon-types">${typesHTML}</div>`;
+}
+
+/**
+ * Creates the HTML string for a small Pokémon card.
+ * @param {Object} pokemonDetails - A formatted Pokémon details object (from api.js).
+ * @returns {string} - The HTML string for the Pokémon card.
+ */
+
+export function createPokemonCardHTML(pokemonDetails) {
+    const imageUrl = pokemonDetails.imageUrl || 'https://placehold.co/120x120/EFEFEF/AAAAAA?text=No+Image';
+    const typesHTML = pokemonDetails.types.map(createTypeSpanHTML).join('');
+    const primaryType = pokemonDetails.types[0];
+    const cardBackgroundColor = typeColors[primaryType] || '#EEE';
+    const imageElement = createPokemonImageHTML(imageUrl, pokemonDetails.name, 'small');
+    const contentElement = createSmallCardContentHTML(pokemonDetails, typesHTML);
+    return `
+        <div class="pokemon-card"
+             data-id="${pokemonDetails.id}"
+             data-name="${pokemonDetails.name}"
+             style="background-color: ${cardBackgroundColor};">
+            ${imageElement}
+            ${contentElement}
+        </div>`;
+}
+
+/**
+ * Generates the HTML for individual stat lines.
+ * @param {Object} statInfo - Object containing stat name and base_stat.
+ * @returns {string} - HTML string for the stat paragraph.
+ */
+
+function createStatLineHTML(statInfo) {
+    const statName = typeof statInfo.name === 'string'
+                     ? statInfo.name.charAt(0).toUpperCase() + statInfo.name.slice(1)
+                     : 'Unknown Stat';
+    return `<p><strong>${statName}:</strong> ${statInfo.base_stat}</p>`;
+}
+
+/**
+ * Generates the HTML for Pokémon abilities.
+ * @param {Array<string>} abilities - Array of ability names.
+ * @returns {string} - Formatted string of abilities.
+ */
+
+function formatAbilitiesHTML(abilities) {
+    return abilities.map(abilityName =>
+        typeof abilityName === 'string'
+        ? abilityName.charAt(0).toUpperCase() + abilityName.slice(1)
+        : 'Unknown Ability'
+    ).join(', ');
+}
+
+/**
+ * Creates the HTML for the detailed stats section of the large card.
+ * @param {Object} pokemonDetails - Formatted Pokémon details.
+ * @param {string} abilitiesHTML - Pre-formatted HTML string for abilities.
+ * @param {string} statsHTML - Pre-formatted HTML string for stats.
+ * @returns {string} - HTML string for the details section.
+ */
+
+function createDetailedStatsHTML(pokemonDetails, abilitiesHTML, statsHTML) {
+    return `
         <div class="pokemon-details-stats">
             <h3>Details:</h3>
             <p><strong>Height:</strong> ${pokemonDetails.height / 10} m</p>
@@ -82,16 +136,37 @@ export function createLargePokemonCardHTML(pokemonDetails) {
             <p><strong>Abilities:</strong> ${abilitiesHTML}</p>
             <h3>Base Stats:</h3>
             ${statsHTML}
-        </div>
-    `;
+        </div>`;
 }
 
 /**
- * Renders a list of Pokémon cards in a specified container.
- * Uses createPokemonCardHTML to generate the HTML.
- * @param {Array<Object>} detailedPokemonList - A list of formatted Pokémon detail objects.
- * @param {HTMLElement} containerElement - The DOM element into which the maps are rendered.
+ * Creates the HTML string for the large Pokémon card in the overlay.
+ * @param {Object} pokemonDetails - A formatted Pokémon details object (from api.js).
+ * @returns {string} - The HTML string of the large card.
  */
+
+export function createLargePokemonCardHTML(pokemonDetails) {
+    const pokemonName = pokemonDetails.name.charAt(0).toUpperCase() + pokemonDetails.name.slice(1);
+    const pokemonId = String(pokemonDetails.id).padStart(3, '0');
+    const imageUrl = pokemonDetails.imageUrl || 'https://placehold.co/200x200/EFEFEF/AAAAAA?text=No+Image';
+    const typesHTML = pokemonDetails.types.map(createTypeSpanHTML).join('');
+    const statsHTML = pokemonDetails.stats.map(createStatLineHTML).join('');
+    const abilitiesHTML = formatAbilitiesHTML(pokemonDetails.abilities);
+    const imageElement = createPokemonImageHTML(imageUrl, pokemonName, 'large');
+    const detailedStatsElement = createDetailedStatsHTML(pokemonDetails, abilitiesHTML, statsHTML);
+    return `
+        <h2>#${pokemonId} ${pokemonName}</h2>
+        ${imageElement}
+        <div class="large-pokemon-types">${typesHTML}</div>
+        ${detailedStatsElement}`;
+}
+
+/**
+ * Renders a list of Pokémon cards into a specified container.
+ * @param {Array<Object>} detailedPokemonList - A list of formatted Pokémon detail objects.
+ * @param {HTMLElement} containerElement - The DOM element into which the cards are rendered.
+ */
+
 export function renderPokemonCards(detailedPokemonList, containerElement) {
     if (!containerElement) {
         console.error('Container element for Pokémon cards not found!');
@@ -112,10 +187,9 @@ export function renderPokemonCards(detailedPokemonList, containerElement) {
 }
 
 /**
- * Renders the details of a single Pokémon in the large overlay map.
- * Uses createLargePokemonCardHTML to generate the HTML.
+ * Renders the details of a single Pokémon into the large overlay card.
  * @param {Object} pokemonDetails - A formatted Pokémon detail object.
- * @param {HTMLElement} containerElement - The DOM element of the large Pokémon card.
+ * @param {HTMLElement} containerElement - The DOM element for the large Pokémon card in the overlay.
  */
 export function renderLargePokemonCard(pokemonDetails, containerElement) {
     if (!pokemonDetails || !containerElement) {
