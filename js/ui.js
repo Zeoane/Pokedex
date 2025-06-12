@@ -8,9 +8,8 @@ export const typeColors = {
 
 /**
  * Displays the loading screen.
- * @param {HTMLElement} loadingScreenElement - The DOM element for the loading screen.
+ * @param {HTMLElement} loadingScreenElement
  */
-
 export function showLoadingScreen(loadingScreenElement) {
     if (loadingScreenElement) {
         loadingScreenElement.classList.remove('hidden');
@@ -19,9 +18,8 @@ export function showLoadingScreen(loadingScreenElement) {
 
 /**
  * Hides the loading screen.
- * @param {HTMLElement} loadingScreenElement - The DOM element for the loading screen.
+ * @param {HTMLElement} loadingScreenElement
  */
-
 export function hideLoadingScreen(loadingScreenElement) {
     if (loadingScreenElement) {
         loadingScreenElement.classList.add('hidden');
@@ -30,24 +28,23 @@ export function hideLoadingScreen(loadingScreenElement) {
 
 /**
  * Generates the HTML string for a single Pokémon type span.
- * @param {string} typeName - The name of the Pokémon type.
- * @returns {string} - HTML string for the type span.
+ * @param {string} typeName
+ * @returns {string}
  */
-
 function createTypeSpanHTML(typeName) {
     const displayTypeName = typeof typeName === 'string'
-                            ? typeName.charAt(0).toUpperCase() + typeName.slice(1)
-                            : 'Unknown Type';
+                                ? typeName.charAt(0).toUpperCase() + typeName.slice(1)
+                                : 'Unknown Type';
     return `<span class="pokemon-type" style="background-color: ${typeColors[typeName] || '#777'}">${displayTypeName}</span>`;
 }
 
 /**
  * Creates the image HTML for a Pokémon card.
- * @param {string} imageUrl - The URL of the Pokémon image.
- * @param {string} pokemonName - The name of the Pokémon for alt text.
- * @returns {string} - HTML string for the image.
+ * @param {string} imageUrl
+ * @param {string} pokemonName
+ * @param {string} size - 'small' or 'large'
+ * @returns {string}
  */
-
 function createPokemonImageHTML(imageUrl, pokemonName, size = 'small') {
     const className = size === 'large' ? 'large-pokemon-image' : 'pokemon-image';
     return `<img src="${imageUrl}" alt="${pokemonName}" class="${className}">`;
@@ -55,11 +52,10 @@ function createPokemonImageHTML(imageUrl, pokemonName, size = 'small') {
 
 /**
  * Creates the textual content HTML (name, ID, types) for a small Pokémon card.
- * @param {Object} pokemonDetails - Formatted Pokémon details.
- * @param {string} typesHTML - Pre-generated HTML for types.
- * @returns {string} - HTML string for text content.
+ * @param {Object} pokemonDetails
+ * @param {string} typesHTML
+ * @returns {string}
  */
-
 function createSmallCardContentHTML(pokemonDetails, typesHTML) {
     const pokemonName = pokemonDetails.name.charAt(0).toUpperCase() + pokemonDetails.name.slice(1);
     const pokemonId = String(pokemonDetails.id).padStart(3, '0');
@@ -71,10 +67,9 @@ function createSmallCardContentHTML(pokemonDetails, typesHTML) {
 
 /**
  * Creates the HTML string for a small Pokémon card.
- * @param {Object} pokemonDetails - A formatted Pokémon details object (from api.js).
- * @returns {string} - The HTML string for the Pokémon card.
+ * @param {Object} pokemonDetails
+ * @returns {string}
  */
-
 export function createPokemonCardHTML(pokemonDetails) {
     const imageUrl = pokemonDetails.imageUrl || 'https://placehold.co/120x120/EFEFEF/AAAAAA?text=No+Image';
     const typesHTML = pokemonDetails.types.map(createTypeSpanHTML).join('');
@@ -87,30 +82,26 @@ export function createPokemonCardHTML(pokemonDetails) {
              data-id="${pokemonDetails.id}"
              data-name="${pokemonDetails.name}"
              style="background-color: ${cardBackgroundColor};">
-            ${imageElement}
-            ${contentElement}
-        </div>`;
+            ${imageElement}${contentElement}</div>`;
 }
 
 /**
  * Generates the HTML for individual stat lines.
- * @param {Object} statInfo - Object containing stat name and base_stat.
- * @returns {string} - HTML string for the stat paragraph.
+ * @param {Object} statInfo
+ * @returns {string}
  */
-
 function createStatLineHTML(statInfo) {
     const statName = typeof statInfo.name === 'string'
-                     ? statInfo.name.charAt(0).toUpperCase() + statInfo.name.slice(1)
-                     : 'Unknown Stat';
+                               ? statInfo.name.charAt(0).toUpperCase() + statInfo.name.slice(1)
+                               : 'Unknown Stat';
     return `<p><strong>${statName}:</strong> ${statInfo.base_stat}</p>`;
 }
 
 /**
  * Generates the HTML for Pokémon abilities.
- * @param {Array<string>} abilities - Array of ability names.
- * @returns {string} - Formatted string of abilities.
+ * @param {Array<string>} abilities
+ * @returns {string}
  */
-
 function formatAbilitiesHTML(abilities) {
     return abilities.map(abilityName =>
         typeof abilityName === 'string'
@@ -121,12 +112,11 @@ function formatAbilitiesHTML(abilities) {
 
 /**
  * Creates the HTML for the detailed stats section of the large card.
- * @param {Object} pokemonDetails - Formatted Pokémon details.
- * @param {string} abilitiesHTML - Pre-formatted HTML string for abilities.
- * @param {string} statsHTML - Pre-formatted HTML string for stats.
- * @returns {string} - HTML string for the details section.
+ * @param {Object} pokemonDetails
+ * @param {string} abilitiesHTML
+ * @param {string} statsHTML
+ * @returns {string}
  */
-
 function createDetailedStatsHTML(pokemonDetails, abilitiesHTML, statsHTML) {
     return `
         <div class="pokemon-details-stats">
@@ -141,10 +131,9 @@ function createDetailedStatsHTML(pokemonDetails, abilitiesHTML, statsHTML) {
 
 /**
  * Creates the HTML string for the large Pokémon card in the overlay.
- * @param {Object} pokemonDetails - A formatted Pokémon details object (from api.js).
- * @returns {string} - The HTML string of the large card.
+ * @param {Object} pokemonDetails
+ * @returns {string}
  */
-
 export function createLargePokemonCardHTML(pokemonDetails) {
     const pokemonName = pokemonDetails.name.charAt(0).toUpperCase() + pokemonDetails.name.slice(1);
     const pokemonId = String(pokemonDetails.id).padStart(3, '0');
@@ -154,8 +143,7 @@ export function createLargePokemonCardHTML(pokemonDetails) {
     const abilitiesHTML = formatAbilitiesHTML(pokemonDetails.abilities);
     const imageElement = createPokemonImageHTML(imageUrl, pokemonName, 'large');
     const detailedStatsElement = createDetailedStatsHTML(pokemonDetails, abilitiesHTML, statsHTML);
-    return `
-        <h2>#${pokemonId} ${pokemonName}</h2>
+    return `<h2>#${pokemonId} ${pokemonName}</h2>
         ${imageElement}
         <div class="large-pokemon-types">${typesHTML}</div>
         ${detailedStatsElement}`;
@@ -163,10 +151,9 @@ export function createLargePokemonCardHTML(pokemonDetails) {
 
 /**
  * Renders a list of Pokémon cards into a specified container.
- * @param {Array<Object>} detailedPokemonList - A list of formatted Pokémon detail objects.
- * @param {HTMLElement} containerElement - The DOM element into which the cards are rendered.
+ * @param {Array<Object>} detailedPokemonList
+ * @param {HTMLElement} containerElement
  */
-
 export function renderPokemonCards(detailedPokemonList, containerElement) {
     if (!containerElement) {
         console.error('Container element for Pokémon cards not found!');
@@ -175,21 +162,27 @@ export function renderPokemonCards(detailedPokemonList, containerElement) {
     const fragment = document.createDocumentFragment();
     detailedPokemonList.forEach(pokemonDetails => {
         if (pokemonDetails) {
-            const cardHTMLString = createPokemonCardHTML(pokemonDetails);
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = cardHTMLString;
-            if (tempDiv.firstElementChild) {
-                fragment.appendChild(tempDiv.firstElementChild);
-            }
-        }
+            const cardElement = createPokemonCardElement(pokemonDetails); 
+            if (cardElement) {
+                fragment.appendChild(cardElement);
+        }}
     });
     containerElement.appendChild(fragment);
 }
 
+function createPokemonCardElement(pokemonDetails) {
+    const cardHTMLString = createPokemonCardHTML(pokemonDetails);
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = cardHTMLString;
+    return tempDiv.firstElementChild;
+}
+
 /**
  * Renders the details of a single Pokémon into the large overlay card.
- * @param {Object} pokemonDetails - A formatted Pokémon detail object.
- * @param {HTMLElement} containerElement - The DOM element for the large Pokémon card in the overlay.
+ * This function is already handled by renderOverlayContent in overlayManager.js,
+ * but if you need to call it directly for specific cases, it's here.
+ * @param {Object} pokemonDetails
+ * @param {HTMLElement} containerElement
  */
 export function renderLargePokemonCard(pokemonDetails, containerElement) {
     if (!pokemonDetails || !containerElement) {

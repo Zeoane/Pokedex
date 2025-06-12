@@ -1,21 +1,15 @@
-import * as UI from './ui.js'; // UI Modul import
+import * as UI from './ui.js';
 
 const pokemonDetailOverlay = document.getElementById('pokemonDetailOverlay');
-const pokemonDetailContent = document.getElementById('pokemonDetailContent'); // Used for the background color
+const pokemonDetailContent = document.getElementById('pokemonDetailContent');
 const closeOverlayButton = document.getElementById('closeOverlayButton');
-const largePokemonCard = document.getElementById('largePokemonCard'); // Container for the contents of the large map
+const largePokemonCard = document.getElementById('largePokemonCard');
 const prevPokemonButton = document.getElementById('prevPokemonButton');
 const nextPokemonButton = document.getElementById('nextPokemonButton');
 
 let _allLoadedPokemon = [];
 let _currentPokemonIndex = -1;
 
-/**
- * Opens the overlay and displays the details of the clicked Pokémon.
- * @param {number} pokemonId - The ID of the clicked Pokémon.
- * @param {Array<Object>} allPokemonData - The complete list of currently loaded Pokémon.
- * @returns {Object|null} The details of the found Pokémon, or null if not found.
- */
 function initializeOverlayData(pokemonId, allPokemonData) {
     _allLoadedPokemon = allPokemonData;
     _currentPokemonIndex = _allLoadedPokemon.findIndex(p => p.id === pokemonId);
@@ -27,15 +21,11 @@ function initializeOverlayData(pokemonId, allPokemonData) {
     return _allLoadedPokemon[_currentPokemonIndex];
 }
 
-/**
- * Renders the Pokémon details into the overlay and sets its background.
- * @param {Object} pokemonDetails - The formatted Pokémon details to display.
- */
 function renderOverlayContent(pokemonDetails) {
     UI.showLoadingScreen(document.getElementById('loadingScreen'));
-    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    document.body.style.overflow = 'hidden';
 
-    const primaryType = pokemonDetails.types[0]; // Direct access to the type name
+    const primaryType = pokemonDetails.types[0];
     if (pokemonDetailContent) {
         pokemonDetailContent.style.backgroundColor = UI.typeColors[primaryType] || '#EEE';
     } else {
@@ -44,68 +34,48 @@ function renderOverlayContent(pokemonDetails) {
     largePokemonCard.innerHTML = UI.createLargePokemonCardHTML(pokemonDetails);
 }
 
-/**
- * Finalizes the overlay display and updates navigation.
- */
 function finalizeOverlayDisplay() {
-    pokemonDetailOverlay.classList.remove('hidden'); // Show Overlay
+    pokemonDetailOverlay.classList.remove('hidden');
     updateNavigationButtons();
     UI.hideLoadingScreen(document.getElementById('loadingScreen'));
 }
 
-/**
- * Opens the overlay and displays the details of the clicked Pokémon.
- * @param {number} pokemonId - The ID of the clicked Pokémon.
- * @param {Array<Object>} allPokemonData - The complete list of currently loaded Pokémon.
- */
 export function openPokemonDetailOverlay(pokemonId, allPokemonData) {
     const pokemonDetails = initializeOverlayData(pokemonId, allPokemonData);
     if (!pokemonDetails) {
-        return; // Exit if Pokémon not found
+        return;
     }
-
     renderOverlayContent(pokemonDetails);
     finalizeOverlayDisplay();
 }
 
 export function closePokemonDetailOverlay() {
     pokemonDetailOverlay.classList.add('hidden');
-    document.body.style.overflow = ''; // Allow background scrolling again
-    largePokemonCard.innerHTML = ''; // Empty contents
-    // Reset background color of overlay content
+    document.body.style.overflow = '';
+    largePokemonCard.innerHTML = '';
     if (pokemonDetailContent) {
-        pokemonDetailContent.style.backgroundColor = ''; 
+        pokemonDetailContent.style.backgroundColor = '';
     }
-    _currentPokemonIndex = -1; // Reset index
+    _currentPokemonIndex = -1;
 }
 
-/**
-* Handles clicks on the overlay to close it when clicked outside the content.
- * @param {Event} event - click event
- */
 function handleOverlayClick(event) {
     if (event.target === pokemonDetailOverlay) {
         closePokemonDetailOverlay();
     }
 }
 
-/**
- * Navigates to the previous or next Pokémon in the overlay.
- * @param {number} direction - -1 for previous, 1 for next.
-*/
 export function navigatePokemon(direction) {
     const newIndex = _currentPokemonIndex + direction;
     if (newIndex >= 0 && newIndex < _allLoadedPokemon.length) {
         _currentPokemonIndex = newIndex;
         const nextPokemon = _allLoadedPokemon[_currentPokemonIndex];
-        UI.showLoadingScreen(document.getElementById('loadingScreen')); // Sets the background color also for navigation
-        const primaryType = nextPokemon.types[0]; // Direct access to the type name
-        if (pokemonDetailContent) { // Ensure that the element exists
+        const primaryType = nextPokemon.types[0];
+        if (pokemonDetailContent) {
             pokemonDetailContent.style.backgroundColor = UI.typeColors[primaryType] || '#EEE';
         }
         largePokemonCard.innerHTML = UI.createLargePokemonCardHTML(nextPokemon);
         updateNavigationButtons();
-        UI.hideLoadingScreen(document.getElementById('loadingScreen'));
     }
 }
 
@@ -114,16 +84,21 @@ function updateNavigationButtons() {
         prevPokemonButton.disabled = (_currentPokemonIndex <= 0);
         nextPokemonButton.disabled = (_currentPokemonIndex >= _allLoadedPokemon.length - 1);
     }
-} // Register event listeners only here in the module // Checking whether the elements exist is important because the script is loaded // before the entire DOM is available, and getElementById could return null.
-if (closeOverlayButton) {
-    closeOverlayButton.addEventListener('click', closePokemonDetailOverlay);
 }
-if (pokemonDetailOverlay) {
-    pokemonDetailOverlay.addEventListener('click', handleOverlayClick);
+
+function initializeOverlayEventListeners() {
+    if (closeOverlayButton) {
+        closeOverlayButton.addEventListener('click', closePokemonDetailOverlay);
+    }
+    if (pokemonDetailOverlay) {
+        pokemonDetailOverlay.addEventListener('click', handleOverlayClick);
+    }
+    if (prevPokemonButton) {
+        prevPokemonButton.addEventListener('click', () => navigatePokemon(-1));
+    }
+    if (nextPokemonButton) {
+        nextPokemonButton.addEventListener('click', () => navigatePokemon(1));
+    }
 }
-if (prevPokemonButton) {
-    prevPokemonButton.addEventListener('click', () => navigatePokemon(-1));
-}
-if (nextPokemonButton) {
-    nextPokemonButton.addEventListener('click', () => navigatePokemon(1));
-}
+
+initializeOverlayEventListeners();

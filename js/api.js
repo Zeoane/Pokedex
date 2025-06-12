@@ -1,77 +1,93 @@
 export const POKE_API_BASE_URL = 'https://pokeapi.co/api/v2/';
 
-/**
- * Retrieves raw data about a specific Pokémon from the API.
- * @param {string} url - URL of specific pokémon.
- * @returns {Promise<Object|null>} - Raw Pokémon data object or null if not found/error.
- */
-// This function should be named fetchPokemonDetails as it fetches details for a single Pokemon.
+function handleFetchError(response, url) {
+    if (response.status === 404) {
+        console.warn(`Pokémon not found at ${url}`);
+    } else {
+        console.error(`Failed to fetch from ${url}: HTTP status ${response.status}`);
+    }
+    return null;
+}
+
 export async function fetchPokemonDetails(url) {
     try {
         const response = await fetch(url);
         if (!response.ok) {
-            if (response.status === 404) {
-                console.warn(`Pokémon not found at ${url}`);
-                return null;
-            }
-            console.error(`Failed to fetch Pokémon details from ${url}: HTTP status ${response.status}`);
-            return null;
+            return handleFetchError(response, url);
         }
         return await response.json();
-    } 
-    catch (error) {
+    } catch (error) {
         console.error(`Error fetching Pokémon data from ${url}:`, error);
         return null;
     }
 }
 
-/**
- * Processes raw Pokémon data into a formatted object for display.
- * This function also handles selecting the best image URL and provides fallbacks.
- * @param {Object} data - Raw Pokémon data from the API.
- * @returns {Object|null} - Formatted Pokémon details object or null if input data is invalid.
- */
+function extractAndFilterNames(dataArray) {
+    return dataArray.map(itemInfo => itemInfo.type?.name || itemInfo.ability?.name || itemInfo.stat?.name)
+                    .filter(name => typeof name === 'string' && name);
+}
+
+function extractImageUrl(sprites) {
+    return sprites.other?.['official-artwork']?.front_default ||
+           sprites.front_default ||
+           'https://placehold.co/120x120/EFEFEF/AAAAAA?text=No+Image';
+}
+
+function extractAndFormatStats(statsData) {
+    return statsData.map(statInfo => ({
+        name: statInfo.stat?.name,
+        base_stat: statInfo.base_stat
+    })).filter(stat => typeof stat.name === 'string' && stat.name);
+}
+
 export function processPokemonDetails(data) {
     if (!data) return null;
-    const imageUrl = data.sprites.other?.['official-artwork']?.front_default || data.sprites.front_default || 'https://placehold.co/120x120/EFEFEF/AAAAAA?text=No+Image'; 
+
+    const imageUrl = extractImageUrl(data.sprites);
+    const types = extractAndFilterNames(data.types);
+    const abilities = extractAndFilterNames(data.abilities);
+    const stats = extractAndFormatStats(data.stats);
+
     return {
         id: data.id,
         name: data.name,
-        imageUrl: imageUrl, 
-        types: data.types.map(typeInfo => typeInfo.type?.name).filter(name => typeof name === 'string' && name), // Ensure types array only contains valid strings
-        height: data.height,
+        imageUrl: imageUrl,
+        types: types,
         weight: data.weight,
-        abilities: data.abilities.map(abilityInfo => abilityInfo.ability?.name).filter(name => typeof name === 'string' && name), // Ensure abilities array only contains valid strings
-        stats: data.stats.map(statInfo => ({
-            name: statInfo.stat?.name,
-            base_stat: statInfo.base_stat
-        })).filter(stat => typeof stat.name === 'string' && stat.name)
+        height: data.height,
+        abilities: abilities,
+        stats: stats
     };
 }
 
-/**
- * Get a list of Pokémon with offset and limit and their detailed information.
- * Fetches raw data for each Pokémon and then processes it.
- * @param {number} limit - Max number of Pokémon to return.
- * @param {number} offset - Query initiation point.
- * @returns {Promise<{list: Array<Object>, nextUrl: string|null}>} - Promise resolving to a list of formatted Pokémon and the URL for the next page.
- */
-// This function correctly fetches a list of Pokémon and should remain fetchPokemonData.
-export async function fetchPokemonData(limit, offset) {
+async function fetchPokemonListRaw(limit, offset) {
     const listUrl = `${POKE_API_BASE_URL}pokemon?limit=${limit}&offset=${offset}`;
-    try { const listResponse = await fetch(listUrl);
+    try {
+        const listResponse = await fetch(listUrl);
         if (!listResponse.ok) {
             console.error('Failed to fetch Pokémon list:', listResponse.status, await listResponse.text());
-            return { list: [], nextUrl: null };
+            return null;
         }
-        const listData = await listResponse.json();
-        const rawDetailPromises = listData.results.map(pokemon => fetchPokemonDetails(pokemon.url)); // Call the fetchPokemonDetails for each individual Pokemon
-        const rawDetails = await Promise.all(rawDetailPromises); // Process the raw details using processPokemonDetails
-        const processedDetails = rawDetails.map(rawPokemon => processPokemonDetails(rawPokemon)); 
-        const validDetailedPokemon = processedDetails.filter(details => details !== null);
-        return { list: validDetailedPokemon, nextUrl: listData.next };
+        return await listResponse.json();
     } catch (error) {
-        console.error('Error in fetchPokemonData:', error);
+        console.error('Error fetching Pokémon list:', error);
+        return null;
+    }
+}
+
+async function getDetailedPokemonFromResults(results) {
+    const rawDetailPromises = results.map(pokemon => fetchPokemonDetails(pokemon.url));
+    const rawDetails = await Promise.all(rawDetailPromises);
+    const processedDetails = rawDetails.map(rawPokemon => processPokemonDetails(rawPokemon));
+    return processedDetails.filter(details => details !== null);
+}
+
+export async function fetchPokemonData(limit, offset) {
+    const listData = await fetchPokemonListRaw(limit, offset);
+    if (!listData) {
         return { list: [], nextUrl: null };
     }
+
+    const validDetailedPokemon = await getDetailedPokemonFromResults(listData.results);
+    return { list: validDetailedPokemon, nextUrl: listData.next };
 }

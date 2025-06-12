@@ -1,69 +1,50 @@
-import * as UI from './ui.js'; // UI Modul import
+import * as UI from './ui.js';
 
 const searchInput = document.getElementById('searchInput');
-const searchButton = document.getElementById('searchButton');
 const pokemonCardContainer = document.getElementById('pokemonCardContainer');
-
-let allPokemonData = []; // This list is filled by main.js
 
 /**
  * Initializes the search logic with the loaded Pokémon data.
-* Called by main.js to pass the allLoadedPokemon list.
- * @param {Array<Object>} pokemonList - The complete list of all loaded Pokémon.
+ * This function is mainly for setting the initial data for Search module.
+ * @param {Array<Object>} pokemonList
  */
-
 export function initializeSearch(pokemonList) {
-    allPokemonData = pokemonList; // Event listener for input in the search field (live search from 3 characters) // This listener is registered only once, when initializeSearch is called.
-    if (!searchInput.hasAttribute('data-listener-added')) { // Prevents duplicate listeners
-        searchInput.addEventListener('input', (event) => {
-            const searchTerm = event.target.value.toLowerCase().trim();
-            performSearch(searchTerm);
-        });
-        searchInput.setAttribute('data-listener-added', 'true'); // Mark that listener has been added
-    }
 }
 
 /**
  * Performs the search based on the search term.
- * @param {string} searchTerm - The search term.
+ * @param {string} searchTerm 
+ * @param {Array<Object>} pokemonList 
+ * @param {HTMLElement} containerElement 
  */
+export function performSearch(searchTerm, pokemonList, containerElement) {
+    UI.showLoadingScreen(document.getElementById('loadingScreen'));
 
-function performSearch(searchTerm) {
-    if (searchTerm.length === 0) {
-    UI.renderPokemonCards(allPokemonData, pokemonCardContainer);
-    return;
-    }   if (searchTerm.length < 3) {
-        pokemonCardContainer.innerHTML = '<p>Bitte gib mindestens 3 Zeichen für die Suche ein.</p>';
-        return;
-    }
-    UI.showLoadingScreen(document.getElementById('loadingScreen')); 
-    const filteredPokemon = allPokemonData.filter(pokemon => {
-       return pokemon.name.toLowerCase().includes(searchTerm);
+    const filteredPokemon = pokemonList.filter(pokemon => {
+        return pokemon.name.toLowerCase().includes(searchTerm);
     });
 
-    
-    pokemonCardContainer.innerHTML = ''; // Empty container before rendering new results
+    containerElement.innerHTML = '';
     if (filteredPokemon.length > 0) {
-        UI.renderPokemonCards(filteredPokemon, pokemonCardContainer);
+        UI.renderPokemonCards(filteredPokemon, containerElement);
     } else {
-        pokemonCardContainer.innerHTML = '<p>Keine Pokémon gefunden, die deiner Suche entsprechen.</p>';
+        containerElement.innerHTML = '<p>Keine Pokémon gefunden, die deiner Suche entsprechen.</p>';
     }
-    UI.hideLoadingScreen(document.getElementById('loadingScreen')); // Hide loading screen
+
+    UI.hideLoadingScreen(document.getElementById('loadingScreen'));
 }
 
-
-export function handleSearch() {
+/**
+ * Handles the click event for the search button (or input change).
+ * This function is now mainly a wrapper for performSearch to be called from main.js.
+ * @param {Array<Object>} pokemonList 
+ * @param {HTMLElement} containerElement 
+ */
+export function handleSearch(pokemonList, containerElement) {
     const searchTerm = searchInput.value.toLowerCase().trim();
-    performSearch(searchTerm);
-} 
-// The handleSearch function, if it's still called from main.js (with button click). // It now calls performSearch internally to streamline the logic.
-// The event listener for the search button remains here, as discussed. // Adds a small check in case the button isn't immediately available.
-if (searchButton) {
-    // Again: Make sure that the listener is added only once
-    if (!searchButton.hasAttribute('data-listener-added')) {
-        searchButton.addEventListener('click', handleSearch);
-        searchButton.setAttribute('data-listener-added', 'true');
+    if (searchTerm.length >= 3) {
+        performSearch(searchTerm, pokemonList, containerElement);
+    } else {
+        containerElement.innerHTML = '<p>Bitte gib mindestens 3 Zeichen für die Suche ein.</p>';
     }
-} else {
-    console.warn("Search button not found, event listener not attached.");
 }
